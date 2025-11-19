@@ -1,0 +1,24 @@
+{
+  "name": "node-chzzk-bot",
+  "version": "1.0.0",
+  "description": "Node.js Chzzk bot for Open-LLM-VTuber",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "buzzk": "^2.3.2",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}

@@ -86,10 +86,12 @@ async def process_single_conversation(
             logger.info(f"With {len(images)} images")
 
         try:
+            logger.debug("🤖 Starting agent chat stream...")
             # agent.chat yields Union[SentenceOutput, Dict[str, Any]]
             agent_output_stream = context.agent_engine.chat(batch_input)
 
             async for output_item in agent_output_stream:
+                logger.debug(f"🤖 Received item from agent: {type(output_item)}")
                 if (
                     isinstance(output_item, dict)
                     and output_item.get("type") == "tool_call_status"
@@ -102,6 +104,7 @@ async def process_single_conversation(
 
                 elif isinstance(output_item, (SentenceOutput, AudioOutput)):
                     # Handle SentenceOutput or AudioOutput
+                    logger.debug("🤖 Processing output item...")
                     response_part = await process_agent_output(
                         output=output_item,
                         character_config=context.character_config,
@@ -111,6 +114,7 @@ async def process_single_conversation(
                         tts_manager=tts_manager,
                         translate_engine=context.translate_engine,
                     )
+                    logger.debug("🤖 Output item processed.")
                     # Ensure response_part is treated as a string before concatenation
                     response_part_str = (
                         str(response_part) if response_part is not None else ""
@@ -121,6 +125,8 @@ async def process_single_conversation(
                         f"Received unexpected item type from agent chat stream: {type(output_item)}"
                     )
                     logger.debug(f"Unexpected item content: {output_item}")
+            
+            logger.debug("🤖 Agent chat stream finished.")
 
         except Exception as e:
             logger.exception(
@@ -139,9 +145,14 @@ async def process_single_conversation(
 
         # Wait for any pending TTS tasks
         if tts_manager.task_list:
+            logger.debug(f"⏳ Waiting for {len(tts_manager.task_list)} TTS tasks...")
             await asyncio.gather(*tts_manager.task_list)
+            logger.debug("✅ TTS tasks complete. Sending backend-synth-complete...")
             await websocket_send(json.dumps({"type": "backend-synth-complete"}))
+        else:
+            logger.debug("⏩ No TTS tasks to wait for.")
 
+        logger.debug("🏁 Finalizing conversation turn...")
         await finalize_conversation_turn(
             tts_manager=tts_manager,
             websocket_send=websocket_send,
@@ -157,6 +168,8 @@ async def process_single_conversation(
                 name=context.character_config.character_name,
                 avatar=context.character_config.avatar,
             )
+        
+        if full_response:
             logger.info(f"AI response: {full_response}")
 
         return full_response  # Return accumulated full_response

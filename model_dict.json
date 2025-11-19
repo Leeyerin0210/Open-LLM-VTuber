@@ -26,5 +26,38 @@
                 "": 1
             }
         }
+    },
+
+    {
+    "name": "saya",
+    "description": "내 첫째 딸",
+    "url": "/live2d-models/銀髪ロリ吸血鬼live2Dモデル/xxg萝莉(3)/xxg萝莉.model3.json",
+    "kScale": 0.5,
+    "initialXshift": 0,
+    "initialYshift": 0,
+    "idleMotionGroupName": "idle",
+    "emotionMap": {
+    	"anger": 3,
+    	"disgust": 2,
+    	"fear": 2,
+    	"joy": 8,
+    	"smirk": 8, 
+    	"sadness": 1,
+    	"surprise": 7
+	},
+    "tapMotions": {
+        "body": {
+            "tap_body": 30,
+            "shake": 30,
+            "pinch_in": 20,
+            "pinch_out": 20
+        },
+        "head": {
+            "flick_head": 40,
+            "shake": 20,
+            "pinch_in": 20,
+            "pinch_out": 20
+        }
     }
+}
 ]

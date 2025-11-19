@@ -1,0 +1,4 @@
+node_modules/
+chzzk-token.json
+.env
+dist/

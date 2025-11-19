@@ -94,8 +94,14 @@ class WebSocketHandler:
             "fetch-backgrounds": self._handle_fetch_backgrounds,
             "audio-play-start": self._handle_audio_play_start,
             "request-init-config": self._handle_init_config_request,
+            "request-init-config": self._handle_init_config_request,
             "heartbeat": self._handle_heartbeat,
+            "user-input-transcription": self._handle_ignore,
         }
+
+    async def _handle_ignore(self, *args, **kwargs) -> None:
+        """Handler that does nothing (for ignored message types)"""
+        pass
 
     async def handle_new_connection(
         self, websocket: WebSocket, client_uid: str
@@ -145,6 +151,11 @@ class WebSocketHandler:
 
         self.chat_group_manager.client_group_map[client_uid] = ""
         await self.send_group_update(websocket, client_uid)
+
+        # Hack: If this is the proxy (we can guess or explicit), we might want to broadcast its messages.
+        # But for now, let's just implement a global broadcast for "audio" and "control" messages
+        # if they originate from a client that is "acting as input source".
+
 
     async def _send_initial_messages(
         self,
@@ -235,6 +246,19 @@ class WebSocketHandler:
         except Exception as e:
             logger.error(f"Fatal error in WebSocket communication: {e}")
             raise
+
+    async def broadcast_text(self, message: str):
+        """Broadcast text message to all connected clients"""
+        disconnected_clients = []
+        for client_uid, ws in self.client_connections.items():
+            try:
+                await ws.send_text(message)
+            except Exception as e:
+                logger.error(f"Error broadcasting to {client_uid}: {e}")
+                disconnected_clients.append(client_uid)
+        
+        for client_uid in disconnected_clients:
+            await self._cleanup_failed_connection(client_uid)
 
     async def _route_message(
         self, websocket: WebSocket, client_uid: str, data: WSMessage
@@ -514,12 +538,22 @@ class WebSocketHandler:
         self, websocket: WebSocket, client_uid: str, data: WSMessage
     ) -> None:
         """Handle triggers that start a conversation"""
+        
+        # Create a broadcaster object that mimics WebSocket.send_text
+        class Broadcaster:
+            def __init__(self, handler):
+                self.handler = handler
+            async def send_text(self, text: str):
+                await self.handler.broadcast_text(text)
+        
+        broadcaster = Broadcaster(self)
+
         await handle_conversation_trigger(
             msg_type=data.get("type", ""),
             data=data,
             client_uid=client_uid,
             context=self.client_contexts[client_uid],
-            websocket=websocket,
+            websocket=broadcaster,  # Pass broadcaster instead of single websocket
             client_contexts=self.client_contexts,
             client_connections=self.client_connections,
             chat_group_manager=self.chat_group_manager,
