@@ -5,6 +5,8 @@
 
 1. sovits 실행. python api_v2.py -a 0.0.0.0
     - -a 0.0.0.0 빼먹으면 서로간에 통신이 안됨. 
+    - 윈도우에서는 도커 사용.
+    - 맥북에서는 먼저 해당 폴더에서 conda activate GPTSoVits 실행 후 명령어 입력.
 2. open-llm-vtuber 실행. uv run run_server.py
 3. scripts - node_chzzk_bot 안에 들어가서 npm start
     - chzzk bot는 현제 재 연결이 되지 않음. 만약 첫 실행때 메인 서버와 통신이 실패했거나, 중간에 통신이 끊긴 경우 반드시 메인 서버를 실행하고 npm start를 다시 실행해야 함
