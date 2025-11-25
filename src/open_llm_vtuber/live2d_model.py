@@ -52,6 +52,10 @@ class Live2dModel:
         # emo_str is a string of the keys in the emoMap dictionary. The keys are enclosed in square brackets.
         # example: `"[fear], [anger], [disgust], [sadness], [joy], [neutral], [surprise]"`
 
+        self.sfx_map: dict = {}
+        if "sfxMap" in self.model_info:
+            self.sfx_map = {k.lower(): v for k, v in self.model_info["sfxMap"].items()}
+
     def _load_file_content(self, file_path: str) -> str:
         """Load the content of a file with robust encoding handling."""
         # Try common encodings first
@@ -171,6 +175,34 @@ class Live2dModel:
             i += 1
         return expression_list
 
+    def extract_sfx(self, str_to_check: str) -> list:
+        """
+        Check the input string for any sfx keywords and return a list of values (the sfx file path) of the sfx found in the string.
+
+        Parameters:
+            str_to_check (str): The string to check for sfx.
+
+        Returns:
+            list: A list of values of the sfx found in the string. An empty list is returned if no sfx are found.
+        """
+
+        sfx_list = []
+        str_to_check = str_to_check.lower()
+
+        i = 0
+        while i < len(str_to_check):
+            if str_to_check[i] != "[":
+                i += 1
+                continue
+            for key in self.sfx_map.keys():
+                sfx_tag = f"[{key}]"
+                if str_to_check[i : i + len(sfx_tag)] == sfx_tag:
+                    sfx_list.append(self.sfx_map[key])
+                    i += len(sfx_tag) - 1
+                    break
+            i += 1
+        return sfx_list
+
     def remove_emotion_keywords(self, target_str: str) -> str:
         """
         Remove the emotion keywords from the input string and return the cleaned string.
@@ -185,6 +217,28 @@ class Live2dModel:
         lower_str = target_str.lower()
 
         for key in self.emo_map.keys():
+            lower_key = f"[{key}]".lower()
+            while lower_key in lower_str:
+                start_index = lower_str.find(lower_key)
+                end_index = start_index + len(lower_key)
+                target_str = target_str[:start_index] + target_str[end_index:]
+                lower_str = lower_str[:start_index] + lower_str[end_index:]
+        return target_str
+
+    def remove_sfx_keywords(self, target_str: str) -> str:
+        """
+        Remove the sfx keywords from the input string and return the cleaned string.
+
+        Parameters:
+            str_to_check (str): The string to check for sfx.
+
+        Returns:
+            str: The cleaned string with the sfx keywords removed.
+        """
+
+        lower_str = target_str.lower()
+
+        for key in self.sfx_map.keys():
             lower_key = f"[{key}]".lower()
             while lower_key in lower_str:
                 start_index = lower_str.find(lower_key)

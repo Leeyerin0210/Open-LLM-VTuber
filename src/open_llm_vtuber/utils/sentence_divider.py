@@ -606,3 +606,4 @@ class SentenceDivider:
         self._is_first_sentence = True
         self._buffer = ""
         self._tag_stack = []
+        self._tag_stack = []
