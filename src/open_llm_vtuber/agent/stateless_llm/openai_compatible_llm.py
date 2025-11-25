@@ -185,6 +185,10 @@ class AsyncLLM(StatelessLLMInterface):
                     chunk.choices[0].delta.content = ""
                 yield chunk.choices[0].delta.content
 
+                if chunk.choices[0].finish_reason is not None:
+                    logger.debug(f"Finish reason detected: {chunk.choices[0].finish_reason}")
+                    break
+
             # If stream ends while still in a tool call, make sure to yield the tool call
             if in_tool_call and accumulated_tool_calls:
                 logger.info(f"Final tool call at stream end: {accumulated_tool_calls}")
